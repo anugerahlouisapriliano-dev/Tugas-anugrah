@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> ANUGRAH | SHADOW TASK</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-red: #ff003c;
+            --neon-blue: #00f2ff;
+            --bg-black: #020205;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Share Tech Mono', monospace; }
+
+        body {
+            background-color: var(--bg-black);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: radial-gradient(circle at 50% 50%, #0a0a15 0%, #020205 100%);
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Header Dash */
+        header {
+            border-left: 4px solid var(--neon-red);
+            padding-left: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-family: 'Rajdhani', sans-serif; letter-spacing: 3px; font-size: 1.5rem; color: var(--neon-red); }
+
+        /* Input Area */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        input {
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #222;
+            padding: 12px;
+            color: var(--neon-blue);
+            outline: none;
+            border-radius: 4px;
+        }
+
+        input:focus { border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+
+        .add-btn {
+            background: var(--neon-red);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            cursor: pointer;
+            font-weight: bold;
+            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+        }
+
+        /* Task List */
+        .task-list { list-style: none; }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid #111;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+            border-left: 2px solid #333;
+        }
+
+        .task-item.completed {
+            opacity: 0.4;
+            border-left-color: var(--neon-blue);
+            text-decoration: line-through;
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #444;
+        }
+
+        .task-text { flex-grow: 1; margin-right: 15px; font-size: 0.9rem; }
+
+        .action-btns { display: flex; gap: 10px; }
+
+        .btn-check { color: var(--neon-blue); cursor: pointer; border: none; background: none; font-size: 1rem; }
+        .btn-del { color: var(--neon-red); cursor: pointer; border: none; background: none; font-size: 1rem; }
+
+        .stats-bar {
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: #444;
+            text-align: right;
+            border-top: 1px solid #111;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1>SHADOW_MANAGER</h1>
+                <p style="font-size: 0.6rem; color: #555;">TASK_PROTOCOL_v1.0</p>
+            </div>
+            <div id="clock" style="font-size: 0.8rem; color: var(--neon-blue);">00:00</div>
+        </header>
+
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="ENTER NEW OBJECTIVE..." autocomplete="off">
+            <button class="add-btn" onclick="addTask()">ADD</button>
+        </div>
+
+        <ul class="task-list" id="taskList">
+            </ul>
+
+        <div class="stats-bar">
+            SYSTEM_STATUS: <span style="color: var(--neon-blue);">ACTIVE</span> | 
+            OBJECTIVES: <span id="taskCount">0</span>
+        </div>
+    </div>
+
+    <script>
+        const taskInput = document.getElementById('taskInput');
+        const taskList = document.getElementById('taskList');
+        const taskCount = document.getElementById('taskCount');
+
+        // Load data on start
+        window.onload = () => {
+            const saved = JSON.parse(localStorage.getItem('shadow_tasks')) || [];
+            saved.forEach(task => renderTask(task));
+            updateStats();
+        };
+
+        function addTask() {
+            if (taskInput.value.trim() === "") return;
+            
+            const task = {
+                id: Date.now(),
+                text: taskInput.value.toUpperCase(),
+                completed: false
+            };
+
+            renderTask(task);
+            saveTasks();
+            taskInput.value = "";
+            updateStats();
+        }
+
+        function renderTask(task) {
+            const li = document.createElement('li');
+            li.className = `task-item ${task.completed ? 'completed' : ''}`;
+            li.setAttribute('data-id', task.id);
+            li.innerHTML = `
+                <span class="task-text">> ${task.text}</span>
+                <div class="action-btns">
+                    <button class="btn-check" onclick="toggleTask(${task.id})">✔</button>
+                    <button class="btn-del" onclick="deleteTask(${task.id})">✖</button>
+                </div>
+            `;
+            taskList.appendChild(li);
+        }
+
+        function toggleTask(id) {
+            const items = JSON.parse(localStorage.getItem('shadow_tasks'));
+            const updated = items.map(t => t.id === id ? {...t, completed: !t.completed} : t);
+            localStorage.setItem('shadow_tasks', JSON.stringify(updated));
+            location.reload(); // Refresh simple way
+        }
+
+        function deleteTask(id) {
+            const items = JSON.parse(localStorage.getItem('shadow_tasks'));
+            const filtered = items.filter(t => t.id !== id);
+            localStorage.setItem('shadow_tasks', JSON.stringify(filtered));
+            location.reload();
+        }
+
+        function saveTasks() {
+            const tasks = [];
+            document.querySelectorAll('.task-item').forEach(li => {
+                tasks.push({
+                    id: parseInt(li.getAttribute('data-id')),
+                    text: li.querySelector('.task-text').innerText.replace('> ', ''),
+                    completed: li.classList.contains('completed')
+                });
+            });
+            localStorage.setItem('shadow_tasks', JSON.stringify(tasks));
+        }
+
+        function updateStats() {
+            taskCount.innerText = document.querySelectorAll('.task-item').length;
+        }
+
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+        }, 1000);
+    </script>
+</body>
+</html>
